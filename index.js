@@ -1,3 +1,4 @@
+require('dotenv').config()
 const XLSX = require('xlsx')
 const axios = require('axios')
 const filename = './Word_list.xlsx'
@@ -12,19 +13,18 @@ function makeQuizLet(i){
   const wordType = content[columns[2] + i] ? content[columns[2] + i].v : ''
   const definition = content[columns[3] + i].v
   const translation = content[columns[4] + i] ? content[columns[4] + i].v : ''
-  const notes = content[columns[6] + i] ? content[columns[6] + i].v : ''
 
   const termCell = `${term}\n(${wordType})\n${pronunciation}`
-  const difinitionCell = `${notes}\n${translation}`
 
-  const vietnamVer = {termCell, difinitionCell}
+  const vietnamVer = {termCell, difinitionCell: translation}
   const englishVer = {termCell, difinitionCell: definition}
   return {vietnamVer, englishVer}
 }
 
 function makeSubmitBody(rank, word, definition){
+  const {QUIZLET_SET_ID} = process.env
   const data = [{
-    setId: 504564228,
+    setId: QUIZLET_SET_ID,
     word,
     rank,
     definition
@@ -34,7 +34,7 @@ function makeSubmitBody(rank, word, definition){
   return {data, requestId}
 }
 
-let index = 0
+let index = 1
 function sendRequest({termCell, difinitionCell}){
   index++
   const body = makeSubmitBody(index, termCell, difinitionCell)
@@ -56,6 +56,6 @@ function sendRequest({termCell, difinitionCell}){
   for (let i=5; i <= max_rows;i++){
     const {vietnamVer, englishVer} = makeQuizLet(i)
     await sendRequest(vietnamVer)
-    await sendRequest(englishVer)
+    // await sendRequest(englishVer)
   }
 })();
